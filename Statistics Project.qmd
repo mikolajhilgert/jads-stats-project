@@ -1,0 +1,86 @@
+---
+title: "Twitch Statistics Project"
+html:
+  toc: true
+  toc-location: left
+  html-math-method: katex
+  css: styles.css
+editor: source
+quarto: 
+  rmarkdown:
+    output_format: pdf_document
+---
+
+```{=html}
+<div style="text-align:center"> 
+JBP061-B-6 Statistics for Data Scientists
+<br><br>
+Mikolaj Hilgert
+</div>
+```
+## 1. Table of Contents
+
+-   [2. Project Description](#project-description)
+-   [3. Data Description](#data-description)
+
+## 2. Project Description {#project-description}
+The goal of this analysis is to evaluate Twitch streamer data and make strategic recommendations for a content creator looking to succeed on the platform. The goal is to assist the content creator in making informed decisions and improving the performance of their Twitch channel.
+
+The analysis aims to provide guidance on several critical questions concerning the success of the Twitch channel. To begin, should the channel focus on mature content aimed at an adult audience, and what effect would this have on audience engagement?
+
+It is critical to understand whether the effect is consistent across various performance metrics, as well as the implications of the decision. As such, does this choice increase or decrease your chances of becoming a Twitch partner?
+
+The final important aspect that needs to be explored is the effect of the minutes streamed more or less significant for content made for a mature audience?
+
+## 3. Data Description {#data-description}
+
+Loading of our data-set and all the relevant libraries
+
+```{r, results='hide', message=FALSE, warning=FALSE, error=FALSE}
+twitch_data <- read.csv("twitch_data.csv")
+library(tidyverse)
+```
+
+```{r}
+head(twitch_data)
+```
+The raw column names are in need of renaming for more consistency and future ease of access: 
+```{r}
+twitch_data <- twitch_data %>% 
+  rename(Watch.time = Watch.time.Minutes., Stream.time = Stream.time.minutes.)
+```
+
+<br><br><br>
+To gain some initial insight into the top performing Streamers on the platform, we can take a look at the top 10 Streamers by watch-time, as well as showing whether they are Mature or not.
+```{r}
+top_10_streamers_watch_time <- twitch_data %>%
+  arrange(desc(Watch.time)) %>%
+  head(20)
+
+ggplot(top_10_streamers_watch_time, aes(x = reorder(Channel, -Watch.time), y = Watch.time, fill = Mature)) +
+  scale_y_continuous(labels = scales::comma) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_manual(values = c("skyblue", "orange"), labels = c("Not Mature", "Mature")) +
+  ggtitle("Top 10 Twitch Streamers by Time Watched") +
+  xlab("Streamers") +
+  ylab("Watch time (minutes)") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+```{r}
+mature <- twitch_data %>% filter(Mature == 'True')
+mature_partnered <- mature %>% filter(Partnered == 'True')
+nrow(mature_partnered) / nrow(mature)
+```
+```{r}
+tail(twitch_data)
+```
+```{r}
+twitch_data %>%
+  group_by(Language) %>%
+  summarize(Count = n()) %>%
+  arrange(desc(Count)) %>%
+  ggplot(aes(x = reorder(Language, -Count), y = Count)) +
+  geom_bar(stat = "identity") +
+  labs(x = "Language", y = "Count") +
+  coord_flip()
+```
