@@ -38,7 +38,9 @@ Loading of our data-set and all the relevant libraries
 
 ```{r, results='hide', message=FALSE, warning=FALSE, error=FALSE}
 twitch_data <- read.csv("twitch_data.csv")
+library(gridExtra)
 library(tidyverse)
+library(scales)
 ```
 
 ```{r}
@@ -69,18 +71,37 @@ ggplot(top_10_streamers_watch_time, aes(x = reorder(Channel, -Watch.time), y = W
 ```{r}
 mature <- twitch_data %>% filter(Mature == 'True')
 mature_partnered <- mature %>% filter(Partnered == 'True')
-nrow(mature_partnered) / nrow(mature)
+
+str_interp("${nrow(mature) / nrow(twitch_data) * 100}% of streamers in the top 1000 stream to a mature audience.")
+
+str_interp("${round(nrow(mature_partnered) / nrow(mature) * 100,2)}% of streamers that stream to a mature audience and are also partnered.")
 ```
-```{r}
-tail(twitch_data)
-```
+
+Language of streamers.
 ```{r}
 twitch_data %>%
   group_by(Language) %>%
   summarize(Count = n()) %>%
-  arrange(desc(Count)) %>%
   ggplot(aes(x = reorder(Language, -Count), y = Count)) +
   geom_bar(stat = "identity") +
   labs(x = "Language", y = "Count") +
   coord_flip()
 ```
+
+```{r}
+# create a list of ggplot objects for each column
+numeric <- twitch_data %>% select_if(is.numeric)
+
+# create a list of ggplot objects for each column
+plots <- lapply(names(numeric), function(col) {
+  ggplot(numeric, aes(x = !!sym(col))) +
+    geom_density() +
+    ggtitle(col) +
+    theme(plot.title = element_text(size = 18, face = "bold")) + 
+    scale_x_continuous(labels = comma_format())
+})
+
+# plot the list of ggplot objects in a grid
+grid.arrange(grobs = plots, ncol = 2)
+```
+
