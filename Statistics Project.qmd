@@ -22,15 +22,23 @@ Mikolaj Hilgert
 
 -   [2. Project Description](#project-description)
 -   [3. Data Description](#data-description)
+-   [4. Exploratory Data Analysis (EDA)](#Exploratory-Data-Analysis)
+-   [5. Statistical Analysis](#Statistical-Analysis)
+-   [6. Results](#Results)
+-   [7. Strategy Recommendation](#Strategy-Recommendation)
+-   [8. Conclusion](#Conclusion)
 
-## 2. Project Description {#project-description}
+## 2. Introduction
+
 The goal of this analysis is to evaluate Twitch streamer data and make strategic recommendations for a content creator looking to succeed on the platform. The goal is to assist the content creator in making informed decisions and improving the performance of their Twitch channel.
 
-The analysis aims to provide guidance on several critical questions concerning the success of the Twitch channel. To begin, should the channel focus on mature content aimed at an adult audience, and what effect would this have on audience engagement?
 
-It is critical to understand whether the effect is consistent across various performance metrics, as well as the implications of the decision. As such, does this choice increase or decrease your chances of becoming a Twitch partner?
+1. Should there be a focus on mature content (18+) audience? What are the consequences one decides to do so in terms of audience reactions?
 
-The final important aspect that needs to be explored is the effect of the minutes streamed more or less significant for content made for a mature audience?
+2. Does this choice lower or increase the chance of becoming a Twitch partner? 
+
+3. Is the effect of the stream minutes larger or smaller in mature content? 
+
 
 ## 3. Data Description {#data-description}
 
@@ -40,30 +48,35 @@ Loading of our data-set and all the relevant libraries
 twitch_data <- read.csv("twitch_data.csv")
 library(gridExtra)
 library(tidyverse)
-library(scales)
+library(ggcorrplot)
 ```
 
 ```{r}
-head(twitch_data)
+head(twitch_data, 4)
 ```
 The raw column names are in need of renaming for more consistency and future ease of access: 
 ```{r}
 twitch_data <- twitch_data %>% 
   rename(Watch.time = Watch.time.Minutes., Stream.time = Stream.time.minutes.)
 ```
+```{r}
+summary(twitch_data)
+```
 
-<br><br><br>
+
+## 4. Exploratory Data Analysis (EDA) {#Exploratory-Data-Analysis}
+
 To gain some initial insight into the top performing Streamers on the platform, we can take a look at the top 10 Streamers by watch-time, as well as showing whether they are Mature or not.
 ```{r}
-top_10_streamers_watch_time <- twitch_data %>%
+top_20_streamers_watch_time <- twitch_data %>%
   arrange(desc(Watch.time)) %>%
   head(20)
 
-ggplot(top_10_streamers_watch_time, aes(x = reorder(Channel, -Watch.time), y = Watch.time, fill = Mature)) +
+ggplot(top_20_streamers_watch_time, aes(x = reorder(Channel, -Watch.time), y = Watch.time, fill = Mature)) +
   scale_y_continuous(labels = scales::comma) +
   geom_bar(stat = "identity", position = "dodge") +
   scale_fill_manual(values = c("skyblue", "orange"), labels = c("Not Mature", "Mature")) +
-  ggtitle("Top 10 Twitch Streamers by Time Watched") +
+  ggtitle("Top 20 Twitch Streamers by Time Watched") +
   xlab("Streamers") +
   ylab("Watch time (minutes)") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
@@ -89,19 +102,30 @@ twitch_data %>%
 ```
 
 ```{r}
-# create a list of ggplot objects for each column
-numeric <- twitch_data %>% select_if(is.numeric)
+# select all numeric columns
+numeric <- twitch_data %>% 
+  select_if(is.numeric)
 
 # create a list of ggplot objects for each column
 plots <- lapply(names(numeric), function(col) {
   ggplot(numeric, aes(x = !!sym(col))) +
     geom_density() +
     ggtitle(col) +
-    theme(plot.title = element_text(size = 18, face = "bold")) + 
-    scale_x_continuous(labels = comma_format())
+    theme(plot.title = element_text(size = 12, face = "bold", hjust = 0.5)) + 
+    scale_x_continuous(labels = scales::comma)
 })
 
 # plot the list of ggplot objects in a grid
 grid.arrange(grobs = plots, ncol = 2)
 ```
+```{r}
+ggcorrplot(cor(numeric), lab = TRUE, type = "lower", outline.col = "white", hc.order = TRUE)
+```
 
+## 5. Statistical Analysis {#Statistical-Analysis}
+
+## 6. Results {#Results}
+
+## 7. Strategy Recommendation {#Strategy-Recommendation}
+
+## 8. Conclusion {#Conclusion}
