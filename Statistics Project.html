@@ -132,7 +132,14 @@ Mikolaj Hilgert
 </div>
 <p>We will first inspect the raw data set, such that we can take a look at the data we are working with. From this we can see the columns.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(twitch_data, <span class="dv">4</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(twitch_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "Channel"              "Watch.time.Minutes."  "Stream.time.minutes."
+ [4] "Peak.viewers"         "Average.viewers"      "Followers"           
+ [7] "Followers.gained"     "Views.gained"         "Partnered"           
+[10] "Mature"               "Language"            </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(twitch_data, <span class="dv">4</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   Channel Watch.time.Minutes. Stream.time.minutes. Peak.viewers
 1    xQcOW          6196161750               215250       222720
@@ -153,7 +160,7 @@ Mikolaj Hilgert
 </div>
 <p>We want to firstly check if there are any missing/null values present in our data set.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">any</span>(<span class="fu">sapply</span>(twitch_data, is.null)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">any</span>(<span class="fu">sapply</span>(twitch_data, is.null)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] FALSE</code></pre>
 </div>
@@ -161,21 +168,21 @@ Mikolaj Hilgert
 <p>From this, we can see that there is no missing data in any of the columns. As such, this means that we do not have to do much preliminary data cleaning.</p>
 <p>The raw column names are in need of renaming for more consistency and future ease of access:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>twitch_data <span class="ot">&lt;-</span> twitch_data <span class="sc">%&gt;%</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">Watch.time.hours =</span> Watch.time.Minutes.,</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>         <span class="at">Stream.time.hours =</span> Stream.time.minutes.,</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">Followers.delta =</span> Followers.gained) <span class="sc">%&gt;%</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">Watch.time.hours =</span> Watch.time.hours <span class="sc">/</span> <span class="dv">60</span>,</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">Stream.time.hours =</span> Stream.time.hours <span class="sc">/</span> <span class="dv">60</span></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>twitch_data <span class="ot">&lt;-</span> twitch_data <span class="sc">%&gt;%</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">Watch.time.hours =</span> Watch.time.Minutes.,</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>         <span class="at">Stream.time.hours =</span> Stream.time.minutes.,</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">Followers.delta =</span> Followers.gained) <span class="sc">%&gt;%</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">Watch.time.hours =</span> Watch.time.hours <span class="sc">/</span> <span class="dv">60</span>,</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">Stream.time.hours =</span> Stream.time.hours <span class="sc">/</span> <span class="dv">60</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="Exploratory-Data-Analysis" class="level2">
 <h2 class="anchored" data-anchor-id="Exploratory-Data-Analysis">4. Exploratory Data Analysis (EDA)</h2>
 <p>We can firstly take a look at the summary statistics of our data set.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(twitch_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(twitch_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   Channel          Watch.time.hours    Stream.time.hours  Peak.viewers   
  Length:1000        Min.   :  2036548   Min.   :  57.75   Min.   :   496  
@@ -203,13 +210,13 @@ Mikolaj Hilgert
 <p>These values provide an overview of the range, central tendency, and distribution of the metrics in the data set. Further analysis can provide deeper insights into relationships, trends, and patterns within the data.</p>
 <p>One thing we can also already notice is that we have both numerical and nominal values. As such we can already split them up for convenience.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>numeric <span class="ot">&lt;-</span> twitch_data <span class="sc">%&gt;%</span> </span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select_if</span>(is.numeric)</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>nominal <span class="ot">&lt;-</span> twitch_data <span class="sc">%&gt;%</span> </span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select_if</span>(<span class="fu">negate</span>(is.numeric))</span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(numeric)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>numeric <span class="ot">&lt;-</span> twitch_data <span class="sc">%&gt;%</span> </span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select_if</span>(is.numeric)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>nominal <span class="ot">&lt;-</span> twitch_data <span class="sc">%&gt;%</span> </span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select_if</span>(<span class="fu">negate</span>(is.numeric))</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(numeric)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>  Watch.time.hours Stream.time.hours Peak.viewers Average.viewers Followers
 1        103269363           3587.50       222720           27716   3246298
@@ -226,7 +233,7 @@ Mikolaj Hilgert
 5         2068424     78998587
 6          554201     61715781</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(nominal)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(nominal)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>    Channel Partnered Mature   Language
 1     xQcOW      True  False    English
@@ -251,8 +258,8 @@ Mikolaj Hilgert
 </div>
 <p>We may also take a look at the correlation between our numerical variables to see if there is any relationship we can observe.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggcorrplot</span>(<span class="fu">cor</span>(numeric), <span class="at">lab =</span> <span class="cn">TRUE</span>, <span class="at">type =</span> <span class="st">"lower"</span>, <span class="at">outline.col =</span> <span class="st">"white"</span>,</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>           <span class="at">hc.order =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggcorrplot</span>(<span class="fu">cor</span>(numeric), <span class="at">lab =</span> <span class="cn">TRUE</span>, <span class="at">type =</span> <span class="st">"lower"</span>, <span class="at">outline.col =</span> <span class="st">"white"</span>,</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>           <span class="at">hc.order =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <p><img src="Statistics-Project_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid" width="672"></p>
 </div>
@@ -265,47 +272,47 @@ Mikolaj Hilgert
 </ul>
 <p>We can also take a look at how much of our data set are mature streamers for some insight.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sprintf</span>(</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"%.2f%% of streamers in the top 1000 stream to a mature audience."</span>,</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">nrow</span>(twitch_data <span class="sc">%&gt;%</span> <span class="fu">filter</span>(Mature <span class="sc">==</span> <span class="st">'True'</span>)) <span class="sc">/</span> <span class="fu">nrow</span>(twitch_data) <span class="sc">*</span> <span class="dv">100</span></span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sprintf</span>(</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"%.2f%% of streamers in the top 1000 stream to a mature audience."</span>,</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">nrow</span>(twitch_data <span class="sc">%&gt;%</span> <span class="fu">filter</span>(Mature <span class="sc">==</span> <span class="st">'True'</span>)) <span class="sc">/</span> <span class="fu">nrow</span>(twitch_data) <span class="sc">*</span> <span class="dv">100</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] "23.00% of streamers in the top 1000 stream to a mature audience."</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sprintf</span>(</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Of that 23%%, %.2f%% of streamers that stream to a mature audience are also partnered."</span>,</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">nrow</span>(twitch_data <span class="sc">%&gt;%</span> <span class="fu">filter</span>(Mature <span class="sc">==</span> <span class="st">'True'</span>, Partnered <span class="sc">==</span> <span class="st">'True'</span>)) <span class="sc">/</span> <span class="fu">nrow</span>(twitch_data <span class="sc">%&gt;%</span> <span class="fu">filter</span>(Mature <span class="sc">==</span> <span class="st">'True'</span>)) <span class="sc">*</span> <span class="dv">100</span></span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sprintf</span>(</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Of that 23%%, %.2f%% of streamers that stream to a mature audience are also partnered."</span>,</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">nrow</span>(twitch_data <span class="sc">%&gt;%</span> <span class="fu">filter</span>(Mature <span class="sc">==</span> <span class="st">'True'</span>, Partnered <span class="sc">==</span> <span class="st">'True'</span>)) <span class="sc">/</span> <span class="fu">nrow</span>(twitch_data <span class="sc">%&gt;%</span> <span class="fu">filter</span>(Mature <span class="sc">==</span> <span class="st">'True'</span>)) <span class="sc">*</span> <span class="dv">100</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] "Of that 23%, 97.83% of streamers that stream to a mature audience are also partnered."</code></pre>
 </div>
 </div>
 <p>Another important nominal variable to explore is, one of language in which the streamer streams:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>twitch_data <span class="sc">%&gt;%</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Language) <span class="sc">%&gt;%</span></span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">Count =</span> <span class="fu">n</span>()) <span class="sc">%&gt;%</span></span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">reorder</span>(Language, <span class="sc">-</span>Count), <span class="at">y =</span> Count)) <span class="sc">+</span></span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">stat =</span> <span class="st">"identity"</span>) <span class="sc">+</span></span>
-<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Language"</span>, <span class="at">y =</span> <span class="st">"Count"</span>) <span class="sc">+</span></span>
-<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>twitch_data <span class="sc">%&gt;%</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Language) <span class="sc">%&gt;%</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">Count =</span> <span class="fu">n</span>()) <span class="sc">%&gt;%</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">reorder</span>(Language, <span class="sc">-</span>Count), <span class="at">y =</span> Count)) <span class="sc">+</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">stat =</span> <span class="st">"identity"</span>) <span class="sc">+</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Language"</span>, <span class="at">y =</span> <span class="st">"Count"</span>) <span class="sc">+</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <p><img src="Statistics-Project_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 <p>From this, we can see that nearly half of the top 1000 streamers, stream in the English language. This can be potentially an important indicator of success. This however can be immediately seen two ways, in one, more English speaking channels make it to the top 1000. This also means that there may be a lot more competition in this language!</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># create a list of ggplot objects for each column</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>plots <span class="ot">&lt;-</span> <span class="fu">lapply</span>(<span class="fu">names</span>(numeric), <span class="cf">function</span>(col) {</span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(numeric, <span class="fu">aes</span>(<span class="at">x =</span> <span class="sc">!!</span><span class="fu">sym</span>(col))) <span class="sc">+</span></span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_density</span>() <span class="sc">+</span></span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggtitle</span>(col) <span class="sc">+</span></span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">12</span>, <span class="at">face =</span> <span class="st">"bold"</span>, <span class="at">hjust =</span> <span class="fl">0.5</span>)) <span class="sc">+</span> </span>
-<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_x_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span>comma)</span>
-<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>})</span>
-<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a><span class="co"># plot the list of ggplot objects in a grid</span></span>
-<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a><span class="fu">grid.arrange</span>(<span class="at">grobs =</span> plots, <span class="at">ncol =</span> <span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># create a list of ggplot objects for each column</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>plots <span class="ot">&lt;-</span> <span class="fu">lapply</span>(<span class="fu">names</span>(numeric), <span class="cf">function</span>(col) {</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(numeric, <span class="fu">aes</span>(<span class="at">x =</span> <span class="sc">!!</span><span class="fu">sym</span>(col))) <span class="sc">+</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_density</span>() <span class="sc">+</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggtitle</span>(col) <span class="sc">+</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">12</span>, <span class="at">face =</span> <span class="st">"bold"</span>, <span class="at">hjust =</span> <span class="fl">0.5</span>)) <span class="sc">+</span> </span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_x_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span>comma)</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a><span class="co"># plot the list of ggplot objects in a grid</span></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a><span class="fu">grid.arrange</span>(<span class="at">grobs =</span> plots, <span class="at">ncol =</span> <span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <p><img src="Statistics-Project_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid" width="672"></p>
 </div>
@@ -314,12 +321,14 @@ Mikolaj Hilgert
 </section>
 <section id="Statistical-Analysis" class="level2">
 <h2 class="anchored" data-anchor-id="Statistical-Analysis">5. Statistical Analysis</h2>
+<p>This section will focus on the statistical analysis using various techniques. With a focus on linear regressions.</p>
+<p>First, we transform the Language column into a factor, as factors are used within R, to represent categorical variables in statistical modeling, including regression analysis.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert 'Language' columns to factor type</span></span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>twitch_data<span class="sc">$</span>Language <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(twitch_data<span class="sc">$</span>Language)</span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Check the updated types of all columns</span></span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sapply</span>(twitch_data, class)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert 'Language' columns to factor type</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>twitch_data<span class="sc">$</span>Language <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(twitch_data<span class="sc">$</span>Language)</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Check the updated types of all columns</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sapply</span>(twitch_data, class)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>          Channel  Watch.time.hours Stream.time.hours      Peak.viewers 
       "character"         "numeric"         "numeric"         "integer" 
@@ -329,15 +338,192 @@ Mikolaj Hilgert
       "character"       "character"          "factor" </code></pre>
 </div>
 </div>
+<p>In order to statistically evaluate: Should there be a focus on mature content (18+) audience? What are the consequences one decides to do so in terms of audience reactions?</p>
+<p>We utilized two linear regression models for this analysis. The first model explores the relationship between mature content and average viewership, while the second model incorporates an interaction term between mature content and streaming time.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="fu">lm</span>(</span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  Average.viewers <span class="sc">~</span> (Watch.time.hours <span class="sc">+</span> Stream.time.hours <span class="sc">+</span> </span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>                       Peak.viewers <span class="sc">+</span> Followers <span class="sc">+</span> Followers.delta <span class="sc">+</span> </span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>                       Views.gained <span class="sc">+</span> Partnered <span class="sc">+</span> Language) <span class="sc">*</span> Mature,</span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> twitch_data</span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>log_twitch_data <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">Watch.time.hours =</span> <span class="fu">log</span>(twitch_data<span class="sc">$</span>Watch.time.hours),</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">Stream.time.hours =</span> <span class="fu">log</span>(twitch_data<span class="sc">$</span>Stream.time.hours),</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">Peak.viewers =</span> <span class="fu">log</span>(twitch_data<span class="sc">$</span>Peak.viewers),</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">Followers =</span> <span class="fu">log</span>(twitch_data<span class="sc">$</span>Followers),</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">Followers.delta =</span> <span class="fu">log</span>(twitch_data<span class="sc">$</span>Followers.delta),</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">Views.gained =</span> <span class="fu">log</span>(twitch_data<span class="sc">$</span>Views.gained),</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">Average.viewers =</span> <span class="fu">log</span>(twitch_data<span class="sc">$</span>Average.viewers),</span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">Partnered =</span> twitch_data<span class="sc">$</span>Partnered,</span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">Mature =</span> twitch_data<span class="sc">$</span>Mature,</span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">Language =</span> twitch_data<span class="sc">$</span>Language,</span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">Channel =</span> twitch_data<span class="sc">$</span>Channel  </span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in log(twitch_data$Followers.delta): NaNs produced</code></pre>
+</div>
+</div>
+<p>The choice of “Average.viewers” as the dependent variable in this analysis stems from the assumption that the number of viewers serves as a reliable proxy for audience reactions or engagement. In other words, if mature content significantly affects the average viewership, it indicates that the audience is reacting to the content type in a certain way.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>model1 <span class="ot">&lt;-</span> <span class="fu">lm</span>(Average.viewers <span class="sc">~</span> Mature <span class="sc">+</span> Stream.time.hours <span class="sc">+</span> Language <span class="sc">+</span> Watch.time.hours <span class="sc">+</span> Followers <span class="sc">+</span> Followers.delta <span class="sc">+</span> Views.gained <span class="sc">+</span> Partnered, <span class="at">data =</span> log_twitch_data)</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(model1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = Average.viewers ~ Mature + Stream.time.hours + Language + 
+    Watch.time.hours + Followers + Followers.delta + Views.gained + 
+    Partnered, data = log_twitch_data)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.93952 -0.02366  0.01652  0.04802  0.54452 
+
+Coefficients:
+                    Estimate Std. Error  t value Pr(&gt;|t|)    
+(Intercept)        -0.076944   0.095328   -0.807  0.41978    
+MatureTrue          0.013644   0.008805    1.550  0.12158    
+Stream.time.hours  -0.965407   0.006070 -159.055  &lt; 2e-16 ***
+LanguageChinese    -0.095735   0.055806   -1.715  0.08658 .  
+LanguageCzech      -0.215674   0.068487   -3.149  0.00169 ** 
+LanguageEnglish    -0.139944   0.050818   -2.754  0.00600 ** 
+LanguageFinnish    -0.117742   0.123083   -0.957  0.33900    
+LanguageFrench     -0.111629   0.052387   -2.131  0.03335 *  
+LanguageGerman     -0.142465   0.053045   -2.686  0.00736 ** 
+LanguageGreek      -0.011234   0.122326   -0.092  0.92685    
+LanguageHungarian  -0.130924   0.093712   -1.397  0.16270    
+LanguageItalian    -0.125044   0.057365   -2.180  0.02951 *  
+LanguageJapanese   -0.112963   0.062143   -1.818  0.06940 .  
+LanguageKorean     -0.084729   0.052576   -1.612  0.10739    
+LanguageOther      -0.196862   0.126870   -1.552  0.12106    
+LanguagePolish     -0.149641   0.060234   -2.484  0.01315 *  
+LanguagePortuguese -0.103213   0.052554   -1.964  0.04982 *  
+LanguageRussian    -0.113203   0.052862   -2.141  0.03248 *  
+LanguageSlovak     -0.073940   0.122419   -0.604  0.54599    
+LanguageSpanish    -0.114681   0.051946   -2.208  0.02750 *  
+LanguageSwedish    -0.089782   0.122919   -0.730  0.46531    
+LanguageThai       -0.085796   0.061542   -1.394  0.16360    
+LanguageTurkish    -0.107460   0.055922   -1.922  0.05495 .  
+Watch.time.hours    0.989235   0.008932  110.746  &lt; 2e-16 ***
+Followers           0.018233   0.005809    3.139  0.00175 ** 
+Followers.delta    -0.009801   0.004505   -2.176  0.02982 *  
+Views.gained       -0.002527   0.006822   -0.370  0.71115    
+PartneredTrue      -0.026124   0.025228   -1.036  0.30068    
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 0.1111 on 969 degrees of freedom
+  (3 observations deleted due to missingness)
+Multiple R-squared:  0.9858,    Adjusted R-squared:  0.9854 
+F-statistic:  2493 on 27 and 969 DF,  p-value: &lt; 2.2e-16</code></pre>
+</div>
+</div>
+<p>This model includes “Mature” as the main variable of interest and a number of control variables: “Stream.time.hours”, “Language”, “Channel”, “Watch.time.hours”, “Followers”, “Followers.delta”, “Views.gained”, and “Partnered”. These controls are included to account for factors that could confound the relationship between mature content and average viewership.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>model2 <span class="ot">&lt;-</span> <span class="fu">lm</span>(Average.viewers <span class="sc">~</span> Mature <span class="sc">*</span> Stream.time.hours <span class="sc">+</span> Language <span class="sc">+</span> Watch.time.hours <span class="sc">+</span> Followers <span class="sc">+</span> Followers.delta <span class="sc">+</span> Views.gained <span class="sc">+</span> Partnered, <span class="at">data =</span> log_twitch_data)</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(model2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = Average.viewers ~ Mature * Stream.time.hours + Language + 
+    Watch.time.hours + Followers + Followers.delta + Views.gained + 
+    Partnered, data = log_twitch_data)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.93952 -0.02392  0.01585  0.04764  0.54677 
+
+Coefficients:
+                              Estimate Std. Error  t value Pr(&gt;|t|)    
+(Intercept)                  -0.063293   0.096322   -0.657  0.51127    
+MatureTrue                   -0.087426   0.102483   -0.853  0.39383    
+Stream.time.hours            -0.967547   0.006443 -150.165  &lt; 2e-16 ***
+LanguageChinese              -0.094384   0.055824   -1.691  0.09121 .  
+LanguageCzech                -0.213621   0.068519   -3.118  0.00188 ** 
+LanguageEnglish              -0.137755   0.050867   -2.708  0.00688 ** 
+LanguageFinnish              -0.123262   0.123211   -1.000  0.31736    
+LanguageFrench               -0.109219   0.052444   -2.083  0.03755 *  
+LanguageGerman               -0.139764   0.053116   -2.631  0.00864 ** 
+LanguageGreek                -0.007823   0.122376   -0.064  0.94905    
+LanguageHungarian            -0.126432   0.093822   -1.348  0.17811    
+LanguageItalian              -0.122123   0.057441   -2.126  0.03375 *  
+LanguageJapanese             -0.110162   0.062208   -1.771  0.07689 .  
+LanguageKorean               -0.081977   0.052650   -1.557  0.11979    
+LanguageOther                -0.189104   0.127113   -1.488  0.13716    
+LanguagePolish               -0.147186   0.060286   -2.441  0.01481 *  
+LanguagePortuguese           -0.102144   0.052566   -1.943  0.05229 .  
+LanguageRussian              -0.111044   0.052907   -2.099  0.03609 *  
+LanguageSlovak               -0.070597   0.122467   -0.576  0.56444    
+LanguageSpanish              -0.112019   0.052016   -2.154  0.03152 *  
+LanguageSwedish              -0.089455   0.122921   -0.728  0.46694    
+LanguageThai                 -0.083925   0.061572   -1.363  0.17319    
+LanguageTurkish              -0.104750   0.055989   -1.871  0.06166 .  
+Watch.time.hours              0.988613   0.008955  110.402  &lt; 2e-16 ***
+Followers                     0.018775   0.005835    3.218  0.00133 ** 
+Followers.delta              -0.009825   0.004505   -2.181  0.02942 *  
+Views.gained                 -0.002498   0.006822   -0.366  0.71431    
+PartneredTrue                -0.023734   0.025344   -0.936  0.34925    
+MatureTrue:Stream.time.hours  0.013536   0.013675    0.990  0.32248    
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 0.1111 on 968 degrees of freedom
+  (3 observations deleted due to missingness)
+Multiple R-squared:  0.9858,    Adjusted R-squared:  0.9854 
+F-statistic:  2404 on 28 and 968 DF,  p-value: &lt; 2.2e-16</code></pre>
+</div>
+</div>
+<p>This model includes the same control variables as Model 1, but also includes an interaction term between “Mature” and “Stream.time.hours”. This allows us to explore whether the effect of mature content on viewership varies depending on the length of the stream.</p>
+<p>Does this choice lower or increase the chance of becoming a Twitch partner?</p>
+<p>To answer this question, you can use a logistic regression model because the outcome (‘Partnered’) is binary. The ‘Mature’ variable would be your main predictor. You could also include other predictors to control for confounding variables.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># model &lt;- glm(Partnered ~ Mature, data = twitch_data, family = binomial)</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="co"># summary(model)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Is the effect of the stream minutes larger or smaller in mature content?</p>
+<p>To answer this, you can use an interaction term in a regression model. This will allow you to estimate whether the effect of ‘Stream.time.hours’ on your outcome variable is different for mature and non-mature content.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="fu">lm</span>(Average.viewers <span class="sc">~</span> Stream.time.hours <span class="sc">*</span> Mature, <span class="at">data =</span> log_twitch_data)</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = Average.viewers ~ Stream.time.hours * Mature, data = log_twitch_data)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-1.2352 -0.5435 -0.1820  0.3994  2.8998 
+
+Coefficients:
+                             Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)                  13.99474    0.27550  50.798   &lt;2e-16 ***
+Stream.time.hours            -0.81425    0.03725 -21.858   &lt;2e-16 ***
+MatureTrue                   -0.87640    0.66192  -1.324    0.186    
+Stream.time.hours:MatureTrue  0.09978    0.08821   1.131    0.258    
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 0.7337 on 996 degrees of freedom
+Multiple R-squared:  0.3668,    Adjusted R-squared:  0.3649 
+F-statistic: 192.4 on 3 and 996 DF,  p-value: &lt; 2.2e-16</code></pre>
+</div>
+</div>
+<p>In the output, the coefficient for the interaction term ‘Stream.time.hours:Mature’ indicates whether the effect of streaming time is larger or smaller for mature content.</p>
+</section>
+<section id="Results" class="level2">
+<h2 class="anchored" data-anchor-id="Results">6. Results</h2>
+</section>
+<section id="Conclusion" class="level2">
+<h2 class="anchored" data-anchor-id="Conclusion">7. Conclusion</h2>
+</section>
+<section id="Appendix" class="level2">
+<h2 class="anchored" data-anchor-id="Appendix">8. Appendix</h2>
+</section>
+<section id="backburner" class="level2">
+<h2 class="anchored" data-anchor-id="backburner">Backburner</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="fu">lm</span>(</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  Average.viewers <span class="sc">~</span> (Watch.time.hours <span class="sc">+</span> Stream.time.hours <span class="sc">+</span> </span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>                       Peak.viewers <span class="sc">+</span> Followers <span class="sc">+</span> Followers.delta <span class="sc">+</span> </span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>                       Views.gained <span class="sc">+</span> Partnered <span class="sc">+</span> Language) <span class="sc">*</span> Mature,</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> twitch_data</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Call:
@@ -414,99 +600,99 @@ Residual standard error: 5804 on 951 degrees of freedom
 Multiple R-squared:  0.5512,    Adjusted R-squared:  0.5286 
 F-statistic: 24.34 on 48 and 951 DF,  p-value: &lt; 2.2e-16</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><img src="Statistics-Project_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid" width="672"></p>
+<p><img src="Statistics-Project_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid" width="672"></p>
 </div>
 <div class="cell-output-display">
-<p><img src="Statistics-Project_files/figure-html/unnamed-chunk-14-2.png" class="img-fluid" width="672"></p>
+<p><img src="Statistics-Project_files/figure-html/unnamed-chunk-19-2.png" class="img-fluid" width="672"></p>
 </div>
 <div class="cell-output-display">
-<p><img src="Statistics-Project_files/figure-html/unnamed-chunk-14-3.png" class="img-fluid" width="672"></p>
+<p><img src="Statistics-Project_files/figure-html/unnamed-chunk-19-3.png" class="img-fluid" width="672"></p>
 </div>
 <div class="cell-output-display">
-<p><img src="Statistics-Project_files/figure-html/unnamed-chunk-14-4.png" class="img-fluid" width="672"></p>
+<p><img src="Statistics-Project_files/figure-html/unnamed-chunk-19-4.png" class="img-fluid" width="672"></p>
 </div>
-<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_model</span>(model, <span class="at">type=</span><span class="st">"int"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_model</span>(model, <span class="at">type=</span><span class="st">"int"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[[1]]</code></pre>
 </div>
 <div class="cell-output-display">
-<p><img src="Statistics-Project_files/figure-html/unnamed-chunk-14-5.png" class="img-fluid" width="672"></p>
+<p><img src="Statistics-Project_files/figure-html/unnamed-chunk-19-5.png" class="img-fluid" width="672"></p>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 [[2]]</code></pre>
 </div>
 <div class="cell-output-display">
-<p><img src="Statistics-Project_files/figure-html/unnamed-chunk-14-6.png" class="img-fluid" width="672"></p>
+<p><img src="Statistics-Project_files/figure-html/unnamed-chunk-19-6.png" class="img-fluid" width="672"></p>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 [[3]]</code></pre>
 </div>
 <div class="cell-output-display">
-<p><img src="Statistics-Project_files/figure-html/unnamed-chunk-14-7.png" class="img-fluid" width="672"></p>
+<p><img src="Statistics-Project_files/figure-html/unnamed-chunk-19-7.png" class="img-fluid" width="672"></p>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 [[4]]</code></pre>
 </div>
 <div class="cell-output-display">
-<p><img src="Statistics-Project_files/figure-html/unnamed-chunk-14-8.png" class="img-fluid" width="672"></p>
+<p><img src="Statistics-Project_files/figure-html/unnamed-chunk-19-8.png" class="img-fluid" width="672"></p>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 [[5]]</code></pre>
 </div>
 <div class="cell-output-display">
-<p><img src="Statistics-Project_files/figure-html/unnamed-chunk-14-9.png" class="img-fluid" width="672"></p>
+<p><img src="Statistics-Project_files/figure-html/unnamed-chunk-19-9.png" class="img-fluid" width="672"></p>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 [[6]]</code></pre>
 </div>
 <div class="cell-output-display">
-<p><img src="Statistics-Project_files/figure-html/unnamed-chunk-14-10.png" class="img-fluid" width="672"></p>
+<p><img src="Statistics-Project_files/figure-html/unnamed-chunk-19-10.png" class="img-fluid" width="672"></p>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 [[7]]</code></pre>
 </div>
 <div class="cell-output-display">
-<p><img src="Statistics-Project_files/figure-html/unnamed-chunk-14-11.png" class="img-fluid" width="672"></p>
+<p><img src="Statistics-Project_files/figure-html/unnamed-chunk-19-11.png" class="img-fluid" width="672"></p>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 [[8]]</code></pre>
 </div>
 <div class="cell-output-display">
-<p><img src="Statistics-Project_files/figure-html/unnamed-chunk-14-12.png" class="img-fluid" width="672"></p>
+<p><img src="Statistics-Project_files/figure-html/unnamed-chunk-19-12.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>log_twitch_data <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">Watch.time.hours =</span> <span class="fu">log</span>(twitch_data<span class="sc">$</span>Watch.time.hours),</span>
-<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">Stream.time.hours =</span> <span class="fu">log</span>(twitch_data<span class="sc">$</span>Stream.time.hours),</span>
-<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">Peak.viewers =</span> <span class="fu">log</span>(twitch_data<span class="sc">$</span>Peak.viewers),</span>
-<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">Followers =</span> <span class="fu">log</span>(twitch_data<span class="sc">$</span>Followers),</span>
-<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">Followers.delta =</span> <span class="fu">log</span>(twitch_data<span class="sc">$</span>Followers.delta),</span>
-<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">Views.gained =</span> <span class="fu">log</span>(twitch_data<span class="sc">$</span>Views.gained),</span>
-<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">Average.viewers =</span> <span class="fu">log</span>(twitch_data<span class="sc">$</span>Average.viewers),</span>
-<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">Partnered =</span> twitch_data<span class="sc">$</span>Partnered,</span>
-<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">Mature =</span> twitch_data<span class="sc">$</span>Mature,</span>
-<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">Language =</span> twitch_data<span class="sc">$</span>Language,</span>
-<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">Channel =</span> twitch_data<span class="sc">$</span>Channel  </span>
-<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb34-14"><a href="#cb34-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb34-15"><a href="#cb34-15" aria-hidden="true" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="fu">lm</span>(</span>
-<span id="cb34-16"><a href="#cb34-16" aria-hidden="true" tabindex="-1"></a>  Average.viewers <span class="sc">~</span> (Watch.time.hours <span class="sc">+</span> Stream.time.hours <span class="sc">+</span> </span>
-<span id="cb34-17"><a href="#cb34-17" aria-hidden="true" tabindex="-1"></a>                       Peak.viewers <span class="sc">+</span> Followers <span class="sc">+</span> Followers.delta <span class="sc">+</span> </span>
-<span id="cb34-18"><a href="#cb34-18" aria-hidden="true" tabindex="-1"></a>                       Views.gained <span class="sc">+</span> Partnered <span class="sc">+</span> Language) <span class="sc">*</span> Mature,</span>
-<span id="cb34-19"><a href="#cb34-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> log_twitch_data</span>
-<span id="cb34-20"><a href="#cb34-20" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb34-21"><a href="#cb34-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb34-22"><a href="#cb34-22" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>log_twitch_data <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">Watch.time.hours =</span> <span class="fu">log</span>(twitch_data<span class="sc">$</span>Watch.time.hours),</span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">Stream.time.hours =</span> <span class="fu">log</span>(twitch_data<span class="sc">$</span>Stream.time.hours),</span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">Peak.viewers =</span> <span class="fu">log</span>(twitch_data<span class="sc">$</span>Peak.viewers),</span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">Followers =</span> <span class="fu">log</span>(twitch_data<span class="sc">$</span>Followers),</span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">Followers.delta =</span> <span class="fu">log</span>(twitch_data<span class="sc">$</span>Followers.delta),</span>
+<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">Views.gained =</span> <span class="fu">log</span>(twitch_data<span class="sc">$</span>Views.gained),</span>
+<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">Average.viewers =</span> <span class="fu">log</span>(twitch_data<span class="sc">$</span>Average.viewers),</span>
+<span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">Partnered =</span> twitch_data<span class="sc">$</span>Partnered,</span>
+<span id="cb45-10"><a href="#cb45-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">Mature =</span> twitch_data<span class="sc">$</span>Mature,</span>
+<span id="cb45-11"><a href="#cb45-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">Language =</span> twitch_data<span class="sc">$</span>Language,</span>
+<span id="cb45-12"><a href="#cb45-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">Channel =</span> twitch_data<span class="sc">$</span>Channel  </span>
+<span id="cb45-13"><a href="#cb45-13" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb45-14"><a href="#cb45-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-15"><a href="#cb45-15" aria-hidden="true" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="fu">lm</span>(</span>
+<span id="cb45-16"><a href="#cb45-16" aria-hidden="true" tabindex="-1"></a>  Average.viewers <span class="sc">~</span> (Watch.time.hours <span class="sc">+</span> Stream.time.hours <span class="sc">+</span> </span>
+<span id="cb45-17"><a href="#cb45-17" aria-hidden="true" tabindex="-1"></a>                       Peak.viewers <span class="sc">+</span> Followers <span class="sc">+</span> Followers.delta <span class="sc">+</span> </span>
+<span id="cb45-18"><a href="#cb45-18" aria-hidden="true" tabindex="-1"></a>                       Views.gained <span class="sc">+</span> Partnered <span class="sc">+</span> Language) <span class="sc">*</span> Mature,</span>
+<span id="cb45-19"><a href="#cb45-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> log_twitch_data</span>
+<span id="cb45-20"><a href="#cb45-20" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb45-21"><a href="#cb45-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-22"><a href="#cb45-22" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Call:
@@ -584,29 +770,76 @@ Residual standard error: 0.1087 on 948 degrees of freedom
 Multiple R-squared:  0.9867,    Adjusted R-squared:  0.986 
 F-statistic:  1467 on 48 and 948 DF,  p-value: &lt; 2.2e-16</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><img src="Statistics-Project_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid" width="672"></p>
-</div>
-<div class="cell-output-display">
-<p><img src="Statistics-Project_files/figure-html/unnamed-chunk-15-2.png" class="img-fluid" width="672"></p>
+<p><img src="Statistics-Project_files/figure-html/unnamed-chunk-20-1.png" class="img-fluid" width="672"></p>
 </div>
 <div class="cell-output-display">
-<p><img src="Statistics-Project_files/figure-html/unnamed-chunk-15-3.png" class="img-fluid" width="672"></p>
+<p><img src="Statistics-Project_files/figure-html/unnamed-chunk-20-2.png" class="img-fluid" width="672"></p>
 </div>
 <div class="cell-output-display">
-<p><img src="Statistics-Project_files/figure-html/unnamed-chunk-15-4.png" class="img-fluid" width="672"></p>
+<p><img src="Statistics-Project_files/figure-html/unnamed-chunk-20-3.png" class="img-fluid" width="672"></p>
+</div>
+<div class="cell-output-display">
+<p><img src="Statistics-Project_files/figure-html/unnamed-chunk-20-4.png" class="img-fluid" width="672"></p>
+</div>
+<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_model</span>(model, <span class="at">type=</span><span class="st">"int"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[[1]]</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="Statistics-Project_files/figure-html/unnamed-chunk-20-5.png" class="img-fluid" width="672"></p>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+[[2]]</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="Statistics-Project_files/figure-html/unnamed-chunk-20-6.png" class="img-fluid" width="672"></p>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+[[3]]</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="Statistics-Project_files/figure-html/unnamed-chunk-20-7.png" class="img-fluid" width="672"></p>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+[[4]]</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="Statistics-Project_files/figure-html/unnamed-chunk-20-8.png" class="img-fluid" width="672"></p>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+[[5]]</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="Statistics-Project_files/figure-html/unnamed-chunk-20-9.png" class="img-fluid" width="672"></p>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+[[6]]</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="Statistics-Project_files/figure-html/unnamed-chunk-20-10.png" class="img-fluid" width="672"></p>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+[[7]]</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="Statistics-Project_files/figure-html/unnamed-chunk-20-11.png" class="img-fluid" width="672"></p>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+[[8]]</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="Statistics-Project_files/figure-html/unnamed-chunk-20-12.png" class="img-fluid" width="672"></p>
 </div>
 </div>
-</section>
-<section id="Results" class="level2">
-<h2 class="anchored" data-anchor-id="Results">6. Results</h2>
-</section>
-<section id="Conclusion" class="level2">
-<h2 class="anchored" data-anchor-id="Conclusion">7. Conclusion</h2>
-</section>
-<section id="Appendix" class="level2">
-<h2 class="anchored" data-anchor-id="Appendix">8. Appendix</h2>
 </section>
 
 </main>

@@ -1,0 +1,162 @@
+---
+title: "JBP061-B-6 Statistics for Data Scientists"
+subtitle: "Data-Driven Recommendations for an Aspiring Twitch Streamer: Leveraging Statistics for Success"
+author: "Mikołaj Hilgert"
+date: "today"
+format: pdf
+editor: source
+---
+
+\thispagestyle{empty}
+\vspace{1.1cm}
+
+# 1. Table of Contents
+-   [2. Project Description](#project-description)
+-   [3. Data Description](#data-description)
+-   [4. Exploratory Data Analysis (EDA)](#Exploratory-Data-Analysis)
+-   [5. Statistical Analysis](#Statistical-Analysis)
+-   [6. Results](#Results)
+-   [7. Conclusion](#Conclusion)
+-   [8. Appendix](#Appendix)
+
+```{=tex}
+\newpage
+\pagenumbering{arabic}
+```
+
+
+# 2. Project Description {#project-description}
+
+The purpose of this analysis is to evaluate the data from the top 1000 Twitch streamers in order to make strategic recommendations for a content creator looking to succeed on the platform. The up-and-coming streamer has expressed their considerations and wants to leverage the tools of statistics in order to make well-informed decisions to best model them self on the successes of the top creators.
+
+As such the following main questions will be evaluated and discussed throughout the document:
+
+1. Should there be a focus on mature content (18+) audience? What are the consequences one decides to do so in terms of the reaction of the  audience?
+
+2. Does such a focus on mature content lower or increase the chance of becoming a Twitch partner?
+
+3. Is the effect of the stream time larger or smaller in mature content?
+
+# 3. Data Description {#data-description}
+
+Firstly, the data-set and all of the relevant libraries can be loaded.
+```{r, results='hide', message=FALSE, warning=FALSE, error=FALSE}
+twitch_data <- read.csv("twitch_data.csv")
+library(knitr)
+library(gridExtra)
+library(ggcorrplot)
+library(sjPlot)
+library(tidyverse)
+```
+We will first inspect the raw data set, such that we can take a look at the data we are working with.
+```{r}
+data_dim <- dim(twitch_data)
+cat("This dataset has", data_dim[1], "rows and", data_dim[2], "columns.")
+```
+Given we now know the dimension of our data, we can inspect the first 5 rows, to be able to get a small insight into what kind of variables we have access to. 
+```{r, eval=FALSE}
+head(twitch_data)
+```
+```{r, warning=FALSE,  message=FALSE, echo=FALSE}
+num_columns <- ncol(twitch_data)
+half_columns <- num_columns %/% 2
+
+first_half <- head(twitch_data[, 1:half_columns])
+second_half <- head(twitch_data[, (half_columns + 1):num_columns])
+
+kable(first_half)
+kable(second_half)
+```
+The data contains various metrics related to the individual channels, such as watch time in minutes, stream time in minutes, peak viewers, average viewers, followers gained, views gained, and other non-numerical characteristics like twitch partner status, content maturity, language and their channel name.
+
+Next, we check if there are any missing/null values present in our data set. If there is any, we will have to deal with the missing values accordingly.
+```{r, warning=FALSE}
+any(sapply(twitch_data, is.null))
+```
+Luckily, there is no missing data in any of the rows. As such, this means that we do not have to do any preliminary data cleaning.
+
+Finally however, some of the raw column names are in need of renaming for more consistency. With this, we also transform the minute metrics into hours to aid interpretability.
+```{r, warning=FALSE}
+twitch_data <- twitch_data %>%
+  rename(Watch.time.hours = Watch.time.Minutes.,
+         Stream.time.hours = Stream.time.minutes.,
+         Followers.delta = Followers.gained) %>%
+  mutate(
+    Watch.time.hours = Watch.time.hours / 60,
+    Stream.time.hours = Stream.time.hours / 60
+  )
+```
+
+## 4. Exploratory Data Analysis (EDA) {#Exploratory-Data-Analysis}
+
+As a first step, we can gain some initial insight into the data by looking at the statistical summary.
+```{r}
+summary(twitch_data)
+```
+
+From this we can see bla bla bla.
+
+Next, To assess the effect of mature content on audience reactions, it is crucial to compare the engagement and response levels between streams with and without mature content. For this purpose, we employ a line chart or bar chart to illustrate the average viewer engagement metrics over time.
+
+
+```{r, warning=FALSE}
+# Group by 'Mature' and calculate mean of 'Average.viewers'
+df_grouped <- twitch_data %>%
+    group_by(Mature) %>%
+    mutate(Mean_Viewers = mean(Average.viewers, na.rm = TRUE)) 
+
+# Create line chart
+ggplot(df_grouped, aes(x = as.logical(Mature), y = Mean_Viewers)) +
+    geom_line(group = 1) +
+    xlab('Mature Content (No/Yes)') +
+    ylab('Average Viewer Engagement') +
+    ggtitle('Effect of Mature Content on Viewer Engagement')
+```
+```{r, warning=FALSE}
+# Calculate the count and percentage of each group
+df_grouped <- twitch_data %>%
+    group_by(Mature) %>%
+    summarise(Count = n()) %>%
+    mutate(Percentage = Count / sum(Count) * 100)
+
+# Create bar chart with percentage labels
+ggplot(df_grouped, aes(x = as.factor(Mature), y = Count)) +
+    geom_bar(stat = 'identity', fill = 'steelblue') +
+    geom_text(aes(label = paste0(round(Percentage, 1), "%")),
+              vjust = -0.3) +
+    xlab('Mature Content (No/Yes)') +
+    ylab('Count of Streamers') +
+    scale_y_continuous(limits = c(0, 880)) +
+    ggtitle('Count and Percentage of Mature vs Non-Mature Streamers')
+```
+
+```{r, warning=FALSE}
+# Group by 'Mature' and 'Partnered' to count the number of each group
+df_grouped <- twitch_data %>%
+  group_by(Mature, Partnered) %>%
+  summarise(Count = n(), .groups = 'drop')
+ 
+
+# Create grouped bar chart
+ggplot(df_grouped, aes(x = as.factor(Mature), y = Count, 
+                       fill = as.factor(Partnered))) +
+    geom_bar(stat = 'identity', position = 'dodge') +
+    xlab('Mature Content (No/Yes)') +
+    ylab('Count of Partners') +
+    ggtitle('Likelihood of Partnership with Mature Content') +
+    scale_fill_discrete(name = "Partnered", labels = c("No", "Yes"))
+
+```
+
+```{r, warning=FALSE}
+# Create scatter plot
+ggplot(twitch_data, aes(x = Stream.time.hours, y = Average.viewers, 
+                        color = as.factor(Mature))) +
+    geom_point() +
+    xlab('Stream Time (minutes)') +
+    ylab('Average Viewership') +
+    ggtitle('Impact of Stream Time on Mature Content Streams') +
+    scale_color_discrete(name = "Mature Content", labels = c("No", "Yes"))
+
+```
+
