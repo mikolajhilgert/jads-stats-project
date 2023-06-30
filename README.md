@@ -8,3 +8,6 @@ The purpose of this analysis is to evaluate the data from the top 1000 Twitch st
 2. Does such a focus on mature content lower or increase the chance of becoming a Twitch partner?
 
 3. Is the effect of the stream time larger or smaller in mature content?
+
+## Twitch Statistics Report Individual Project
+- Read the resulting [**report**](Twitch-Stats-Report.pdf)
