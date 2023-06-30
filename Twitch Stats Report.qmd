@@ -1,0 +1,351 @@
+---
+title: "JBP061-B-6 Statistics for Data Scientists"
+subtitle: "Data-Driven Recommendations for an Aspiring Twitch Streamer: Leveraging Statistics to model success"
+author: "Mikołaj Hilgert"
+date: "today"
+format: pdf
+editor: source
+---
+
+```{=tex}
+\thispagestyle{empty}
+\vspace{1.1cm}
+```
+# 1. Table of Contents
+
+-   [2. Project Description](#project-description)
+-   [3. Data Description](#data-description)
+-   [4. Exploratory Data Analysis (EDA)](#Exploratory-Data-Analysis)
+-   [5. Statistical Analysis](#Statistical-Analysis)
+-   [6. Discussion & Recommendation](#Discussion)
+-   [7. Conclusion](#Conclusion)
+-   [8. Bibliography](#Bibliography)
+-   [9. Appendix](#Appendix)
+
+```{=tex}
+\newpage
+\pagenumbering{arabic}
+```
+# 2. Project Description {#project-description}
+
+The purpose of this analysis is to evaluate the data from the top 1000 Twitch streamers from the year `2020` in order to make strategic recommendations for a content creator looking to make a start on the platform. The up-and-coming streamer has expressed their considerations and wants to leverage the tools of statistics to make well informed decisions, such that they can model their journey based on the successes of top creators.
+
+As such the following main questions will be evaluated and discussed throughout the document:
+
+1.  Should there be a focus on mature content (18+) audience? What are the consequences one decides to do so in terms of the reaction of the audience?
+
+2.  Does such a focus on mature content lower or increase the chance of becoming a Twitch partner?
+
+3.  Is the effect of the stream time larger or smaller in mature content?
+
+# 3. Data Description {#data-description}
+
+Firstly, the data-set and all of the relevant libraries can be loaded.
+
+```{r, results='hide', message=FALSE, warning=FALSE, error=FALSE}
+twitch_data <- read.csv("twitch_data.csv")
+library(knitr)
+library(gridExtra)
+library(ggcorrplot)
+library(sjPlot)
+library(tidyverse)
+theme_set(theme_classic())
+```
+
+We will first inspect the raw data set, such that we can take a look at the data we are working with.
+
+```{r}
+dimensions <- dim(twitch_data)
+cat("This dataset has", dimensions[1], "rows and", dimensions[2], "columns.")
+```
+
+Given we now know the dimension of our data, we can inspect the first 6 rows, to be able to get a small insight into what kind of variables we have access to.
+
+```{r, eval=FALSE}
+head(twitch_data)
+```
+
+```{r, warning=FALSE,  message=FALSE, echo=FALSE}
+num_columns <- ncol(twitch_data)
+half_columns <- num_columns %/% 2
+
+first_half <- head(twitch_data[, 1:half_columns])
+second_half <- head(twitch_data[, (half_columns + 1):num_columns])
+
+kable(first_half)
+kable(second_half)
+```
+
+The data contains various metrics related to the individual channels, such as watch time in minutes, stream time in minutes, peak viewers, average viewers, followers gained, views gained, and other non-numerical characteristics like twitch partner status, content maturity, language and their channel name.
+
+Next, we check if there are any missing/null values present in our data set. If there is any, we will have to deal with the missing values accordingly.
+
+```{r, warning=FALSE}
+any(sapply(twitch_data, is.null))
+```
+
+Luckily, there is no missing data in any of the rows. As such, this means that we do not have to do any preliminary data cleaning. We also update column names and scale.
+```{r, warning=FALSE}
+twitch_data <- twitch_data %>%
+  rename(Watch.time.hours = Watch.time.Minutes., 
+         Stream.time.hours = Stream.time.minutes., 
+         Followers.delta = Followers.gained) %>%
+  mutate( Watch.time.hours = Watch.time.hours / 60,
+          Stream.time.hours = Stream.time.hours / 60)
+```
+
+## 4. Exploratory Data Analysis (EDA) {#Exploratory-Data-Analysis}
+
+In this section, we set out explore the data through graphs and basic statistics. This section helps in gaining a deeper understanding of the data set. This allows us to gain some insight and potentially be able to gauge some initial trends. This section will let us also see if there are any issues with out data. Not just from the lens of missing data, but rather if our data set can be used to generalize for the population, as that is our ultimate goal.
+
+As a first step, we can take a look at the statistical summary of the data.
+
+```{r}
+summary(twitch_data)
+```
+These values provide an overview of the range, central tendency, and distribution of the metrics in the data set. As mentioned in the end of the previous section, the motivation of renaming to `Followers.delta` is that we can observe that a minimum value of that column is actually negative (-15772). This implies that a streamer lost followers in total over the duration of a year.
+
+From these summary statistics, it is apparent that the data set is skewed, as indicated by the large differences between the minimum and maximum values for most variables. Additionally, the mean values are higher than the median values for several variables, suggesting a positive skewness. 
+We can do some data type manipulation:
+```{r, warning=FALSE}
+numeric <- twitch_data%>%select_if(is.numeric)
+twitch_data <- twitch_data %>%  mutate(
+    Mature = as.logical(Mature), Partnered = as.logical(Partnered),
+    Language = as.factor(Language) %>% relevel("English"))
+```
+
+After separating our numerical variables into their own separate variable, we may now look at the distribution of each.
+
+```{r}
+plots <- lapply(names(numeric), function(col) {
+  ggplot(numeric, aes(x = !!sym(col))) + geom_density() + ggtitle(col) +
+    scale_x_continuous(breaks = c(min(numeric[[col]]), max(numeric[[col]])))})
+grid.arrange(grobs = plots, ncol = 3)
+```
+
+From this, we can see that our intuition was correct, Each of the variables is largely positively skewed. As such, it can be beneficial to apply a log scale to all of these numerical variables.
+
+Next, To assess the effect of mature content on audience reactions, we compare the engagement and response levels between streams with and without mature content. We can evaluate the average viewer engagement (Amount of viewers on average) against the mature content rating, in order to see if there is a relationship between the two.
+
+```{r, warning=FALSE}
+twitch_data %>%
+    group_by(Mature) %>% summarise(Mean_Viewers = round(mean(Average.viewers)))
+```
+This seems to indicate, that on average the non mature streamers in the top 1000, have more viewers on average than those who have mature content warning. This by itself is quite misleading, as we do not yet know how many streamers fall under each group. As such, we should look at the proportional representation of each group. There may be a data imbalance.
+
+```{r, warning=FALSE, fig.height=2.5, fig.width=4, fig.align='center'}
+mature_dist <- twitch_data %>% 
+    group_by(Mature) %>% 
+    summarise(Count = n()) %>% mutate(Percentage = Count / sum(Count) * 100)
+ggplot(mature_dist, aes(x = Mature, y = Count, fill = Mature)) +
+  geom_bar(stat = "identity", width = 0.5) +
+  geom_text(aes(label =Count),position =position_dodge(width =0.9),vjust =1.4) +
+  labs(x = "Mature", y = "Count", title = "Twitch Data Count by Mature")
+```
+As mentioned, looking at the distribution of Mature across the data set, we can see that only 230 of our data set of the top 1000 streamers, have stream to a mature audience. This means that we have quite a unbalanced data set.
+
+Another area of interest is the partnership status of mature channels, in the following plot, we wish to investigate the relationship between partnership status and the content they produce.
+
+```{r, warning=FALSE, fig.height=2.5, fig.width=4, fig.align='center'}
+mature_partnered <- twitch_data %>% 
+  group_by(Mature, Partnered) %>% summarise(Count = n(), .groups = 'drop')
+
+ggplot(mature_partnered, aes(x = Mature, y = Count, fill = Partnered)) +
+  geom_bar(stat = 'identity', position = 'dodge') +
+  geom_text(aes(label = Count), position = position_dodge(width = 0.9),
+            vjust = -0.5) +
+  xlab('Mature Content') +   ylab('Count') +
+  scale_y_continuous(limits = c(0, 800)) +
+  ggtitle('Partnership Status with Mature Content') +
+  scale_fill_discrete(name = "Partnered", labels = c("No", "Yes"))
+```
+From the plot above, we can see that the non partnered representation in our data-set is extremely small, namely only 22 of the 1000 channels are *not* partnered, regardless of their content maturity. This can already indicate a problem with our analysis and data set, since our data comprises of the **top** 1000 channels, they are also likely to have been partnered with Twitch, which does not necessarily accurately describe the entire population.
+
+Finally, to gain insight for our last area of interest, specifically on the effect of stream time in mature content. We can take a look at a scatter plot of these variables.
+
+```{r, warning=FALSE}
+ggplot(twitch_data, aes(x = Stream.time.hours, y = Average.viewers)) +
+  geom_point() +
+  labs(x = "Stream Time (hours)", y = "Average Viewers") +
+  ggtitle("Effect of Stream Time on Average Viewers") +
+  facet_wrap(~ Mature, ncol = 1, 
+             scales = "free_y",
+             labeller = labeller(Mature = c("FALSE" = "Mature: FALSE", "TRUE" = "Mature: TRUE")))
+```
+As can be seen in the plot above, there is a big difference in the y axis of the two classes. Moreover, the non-mature class has very large outliers. Which could be of interest. We can also notice that more stream hours doesn't really result in larger average viewership. We will investigate this further in th modelling section.
+
+We can further investigate which channels these are:
+```{r}
+twitch_data %>%
+  group_by(Channel, Mature, 'Hours_streamed' = round(Stream.time.hours)) %>%
+  summarise(Average_viewership = mean(Average.viewers), .groups = 'drop') %>%
+  arrange(desc(Average_viewership)) %>% head(10) 
+```
+Out of the top 10 ordered by average viewership, 6 of these channels are E-sports event channels. As such they are not representative of individuals streaming.
+
+We may also take a look at the channel distribution by language using a bar plot.
+```{r, warning=FALSE, fig.height=2.5, fig.width=4, fig.align='center'}
+languages <- twitch_data %>%
+  group_by(Language) %>%
+  summarize(Count = n())
+ggplot(languages, aes(x = reorder(Language, -Count), y = Count)) +
+  geom_bar(stat = "identity") +
+  labs(x = "Language", y = "Count") +
+  coord_flip()
+```
+Since, nearly 50% of our data is of English streamers, this also means that this is quite unbalanced. For this study, it is also not feasible to recommend for someone to stream some language which we do not know they can speak, as such language will be mostly omitted for this report. 
+
+Finally we can also check for correlation via a matrix:
+```{r, warning=FALSE}
+ggcorrplot(cor(numeric), lab = TRUE, type = "lower", outline.col = "white",
+           hc.order = TRUE)
+```
+Looking at the results, we can notice a stronger relationships between `Followers` and `Followers.delta` as well as, between `Watch.time.hours` and `Followers`. This suggests that increasing watch time results in an increase in followers. We must keep in mind however, correlation does not imply causation. Even though it may make sense logically, we must still evaluate further.
+
+## 5. Statistical Analysis {#Statistical-Analysis}
+
+In this section, we will employ generalized linear regressions to delve into the data further and attempt to create models that will facilitate informed decision making. For each question we will try to come up with one model that can let us analyze relationships in the best way.
+
+To address the first, we wish to evaluate whether streaming mature content for an audience that is 18+ can have consequences on the audience reaction. We need to find a way to quantify 'audience reaction'. This is not a trivial task as would involve trying to set a value to peoples feelings. Moreover, if we look at the columns in our data set, we do not have any metric or feature that can describe feelings or reaction.
+
+Instead we have a arrangement of channel related metrics. Namely we have figures such as `Average.viewers`, `Views.gained`, `Peak.viewers` or `Followers.delta`. Of these, I find that `Average.viewers` can describe audience reaction. This is because it represents a quantitative measurement of the number of people who watched a channel. Moreover, it being a mean, it represents the viewership numbers over multiple streams. Although, it would be even more valuable if we had time series data, such that we can observe effects over periods of time. It must also be reiterated that no single metric is entirely fault-proof in capturing the entire situation. 
+
+With that, we can create our first model. To explore the relationship between `Average.viewers` (response variable) and the other predictors.
+```{r, results='hide'}
+average_viewers <- lm(Average.viewers ~ Mature + Stream.time.hours +
+               Language + Watch.time.hours + Followers + Followers.delta +
+               Views.gained + Partnered, data = twitch_data)
+
+summary(average_viewers)
+```
+Looking at the summary ([Appendix 1](#1)) results of the model, we can see that:
+`MatureTRUE` is negative but not statistically significant (p value > 0.05), suggesting that there is no strong evidence that mature content has a significant effect on viewership even when controlling for other factors. We also do see that, `Stream.time.hours`, `Watch.time.hours` and `Followers.delta` are all highly significant predictors, indicating they have a substantial influence on the average viewership metric. Interestingly `Stream.time.hours` is also negative, this suggests that streaming more does not increase average viewership. This agrees with the trend noticed during EDA.
+
+As such, we will analyze plots for the given model and evaluate.
+```{r}
+par(mfrow = c(2,2), mar = c(3, 4, 1.4, 1))
+plot(average_viewers, which = c(1,2,5))
+```
+We first look at the `Residuals vs Fitted` plot, Used to check the linear relationship assumptions. A horizontal line, without distinct patterns is an indication for a linear relationship. `[1]` From the plot above, there is no pattern in the residual plot. This suggests that we can assume linear relationship between the predictors and the outcome variables. That does fit the adhere to the first of the assumptions of Linear regressions. 
+
+The `Normal-QQ` plot of residuals can be used to visually check the normality assumption. The normal probability plot of residuals should approximately follow the dotted line. `[1]` From this we can clearly see that this plot does not do so, hence we reinforce the point that our data is not normally distributed and may benefit from a log scaling. 
+
+The final plot we will examine is the `Residual vs Leverage` plot, this plot helps us identify outliers and points with high leverage, which are data points that have large influence on the model. `[1]`
+
+The plot above highlights the 3 most extreme points, however none of them appear outside of the limits of the cooks distance. However, there are 3 points namely: 378, 552, 923 that are of leverage 1. That mean they are very influential for the model.
+
+
+Given that we do our residuals are not normal, we will try to log scale of the numerical variables to attempt to make our data more normal. It must be mentioned that there is a cost to such an operation, since one of our columns namely `Followers.delta` contains negative values, these cannot be log transformed, therefore are removed (replaced with NA's) as a result. 
+
+`Note, i dont do this analysis again because of how much space it takes.`
+```{r, error=FALSE, warning=FALSE}
+log_twitch_data <- twitch_data %>%
+  mutate(across(colnames(numeric), ~log(.)))
+```
+
+Given that, lets run the same model but now using the log scaled data on the same model that we defined before.
+```{r, results='hide'}
+average_viewers_log <- lm(Average.viewers ~ Mature + Stream.time.hours + 
+               Language +  Watch.time.hours + Followers + Followers.delta +
+               Views.gained + Partnered, data = log_twitch_data)
+summary(average_viewers_log)
+```
+According to the summary ([Appendix 2](#2)) It appears that log transformation have improved the model by resulting in additional `significant` relationships between the response and predictor variables, that were statistically insignificant before the transformation. However, our goal of identifying a the interaction between viewer reception (average viewers) and content Maturity is still of a p-value of `0.12158` which is still not statistically significant. 
+
+On the other hand, the log transformation of the residuals did offer other insights. Namely, our R^2 has increased significantly, from `0.3361` to `0.9854`. Also, that there is a positive linear relationship between `Watch.time.hours` and `Followers` with `Average.viewers`. This is sort of natural reasoning, that if you have more viewers on average then people have watched you for more hours as well as you have more followers. Another outcome seen, is that certain languages are also more significant. As mentioned in EDA however, we will not focus on language in this study as we find its not possible to recommend someone to stream in another language entirely. 
+
+Given that fact, we now will attempt to model the relationship between production of mature content and effect that has on Twitch Partnership status.
+
+For this we can make use of a logistic regression. Since the dependent variable that we are trying to predict is being a Twitch partner or not, which is binary. Using a logistic regression also allows us to handle both continuous and categorical variables such that we can also control for all of the other independent variables.
+```{r, results='hide'}
+partnered_mature <- glm(Partnered ~ Mature + Watch.time.hours + 
+                  Stream.time.hours + Peak.viewers +
+                  Followers + Followers.delta + Views.gained + 
+                  Average.viewers + Language,
+                  data = twitch_data, family = binomial())
+summary(partnered_mature)
+```
+Looking at the summary from this model ([Appendix 3](#3)), we can find that there is no significance between maturity and partnership status. This is expected as we found that there are only `22` non partnered streamers in this data set. As mentioned, this means that our minority class is very small. As a consequence of that, there is no power/significance to predict.
+
+Finally, we want to address the final point to investigate. Namely, whether the effect of stream time is larger or smaller for mature content creators.
+
+To do this, we again can make use of a linear regression. We include an interaction term between `Stream.time.hours` and `Mature`. The interaction term allows the effect of stream time on the average viewership to vary depending on whether the content is mature or not. We again, like in the previous models control for the rest of our independent variables.
+
+In this context, we might suspect that there is an effect of streaming time on the success. Specifically, it might differ depending on whether or not the streamer streams mature content. A potential example reasoning could be; longer stream times might be more beneficial for streamers who focus on mature content. As they could be able to stream at non-standard hours. 
+
+By including the interaction term `Stream.time.hours*Mature` in the model, we can test this hypothesis directly.
+```{r, results='hide'}
+streamMatureModel <- lm(Average.viewers ~ Stream.time.hours * Mature + 
+                          Watch.time.hours + Peak.viewers + Followers + 
+            Followers.delta + Views.gained + Partnered + Language, 
+            data = twitch_data)
+summary(streamMatureModel)
+```
+From the summary ([Appendix 4](#4)) we can notice that the coefficient of the interaction term between `Stream.time.hours` and `Mature` is -0.1402. This negative coefficient suggests that the effect of stream time on Average.viewers is slightly smaller in mature content compared to non-mature content. Again, sadly the interaction is not statistically significant as the p value  is larger than 0.05. There were other points of significance however, The intercept term suggests a baseline average viewership of around 4,882. Then, again the negative coefficient for `Stream.time.hours` indicates that an increase in streaming hours is associated with a decrease in `Average.viewers`. This is something present also in the other models. Conversely, higher values for variables like `Watch.time.hours`, `Peak.viewers`, and `Followers.delta` have positive coefficients, suggesting that more watch time hours, a larger number of peak viewers, and an increase in follower count will correspond to higher average viewership on Twitch. These are quite natural conclusions.
+
+# 6. Recommendation & Discussion {#Discussion}
+
+## Recommendation
+The aforementioned models have been created and analysed to then give recommendations to the given questions. 
+
+1. Should there be a focus on mature content (18+) audience? What are the consequences one decides to do so in terms of the reaction of the audience?
+
+As it was mentioned in the analysis of the model, there is no significant relationship between average viewership and maturity rating. As such, the maturity rating does not seem to have an effect on the reaction of audience. As such the recommendation is that you can pick whether you want to stream to a mature audience. As it should not have any consequences.
+
+2.  Does such a focus on mature content lower or increase the chance of becoming a Twitch partner?
+
+For this, again there is nothing that suggests that there is a relationship between steaming mature content and becoming a Twitch partner.
+
+3. Is the effect of the stream time larger or smaller in mature content?
+
+Based on the analysis of the model created for this, the suggestion is that streaming more hours actually has a negative effect on average viewership regardless of the content type you stream. As such, you should not be streaming for too many hours, as that can lower your average viewership.
+
+## Discussion
+
+### Data limitations
+As mentioned at many instances during this report, the data was limited to the top 1000 streamers on twitch. This intrinsically means that whatever insight is extracted throughout this document may not extrapolate the same for the rest of the population. This is often a problem in using statistics, and it is called sampling biased, as we purposefully select the top 1000 streamers, a trend that we could observe here does not necessarily have to be present globally in the population. An example of this could be the analysis of two of the models that suggested that `Stream.time.hours` has a significant negative coefficient for `Average.viewers`. This seems to suggest that to have more viewers on average, you should stream for less hours. This can be the case for this small subset of streamers, however one can imagine that in a highly competitive market such as streaming, not streaming, especially when you are not known yet is not a very good approach for growth. A possible reasoning for this trend could be that large streamers already have established fan bases, such that you will have viewers regardless.
+
+Another problem that arises is that nearly everyone is partnered as they are a big streamer. As mentioned within the data set there are only 22 non-partnered streamers (regardless of their maturity status). That is 2.2%, this is definitely not a representation of the population. The reason why we have such high representation of Twitch partners in the top 1000, can be due to the benefits that being partner brings to a channel: It allows for monetization options [3]. Most top streamers as a consequence have made streaming their full time jobs. This is not the situation for a lot of streamers in the total population. 
+
+Moreover, the data was fetched in 2020, which in the age of the internet is a long time ago. As such, any recommendation made now could potentially have applied in 2020, but this doesn't mean it can reflect what would work now. A potential fix to this issue would be the addition of time series or even potentially panel data such that you can observe results over multiple years. This has the added benefit to potentially observe how a channel was performing before partnership and after.
+
+Yet another limitation of the data is the available features. They are all success factors that do not allow us to differentiate from one another. For most of the features, the streamer is not directly able to affect them, such as watch time. This is more a consequence of their success. To aid this, new data that gives context on their streaming preferences, such as their stream time per category. Other metrics that could be useful are for example the tags they have in their streams, this would allow us to differentiate more between streamers as Twitch does not only have gaming categories, but also Just Chatting as well as a multitude of others. `[3]`
+
+### Suggestion for improvement
+
+To aid this study such that more insight can extracted would be to include more data. 
+
+Most importantly, to include data from the entire population, not just the hyper successful. This is integral for such a study as insight gained based on the hyper successful does not necessary carry over to the rest of the population, who is also trying to succeed in this hypercompetetive field. Moreover, if we could include some features that describe the type of content the streamer makes. This data is readily available on TwitchTracker `[2]` and could be accessible through web-scraping or API. Lastly, if we could also scrape more up to date data and or over multiple years (such as adding time series or panel data).
+
+# 7. Conclusion {#Conclusion}
+
+In conclusion, it is possible to give a recommendation that answer the given question, however as seen through the length of this report, many problems with the validity of such a recommendation are highlighted. These problems were reiterated and explained extensively within the discussion section, with many possible suggestions to improve this study such that the outcomes can be more reflective of the entire streaming landscape rather than the hyper successful subset.
+
+# 8. Bibliography {#Bibliography}
+[1]: Kassambara, soyan, R., Vividdiagnostics, Eva, Visitor,Mann, T. 
+(2018, March 11). Linear regression assumptions and diagnostics in R: 
+Essentials. STHDA. http://www.sthda.com/english
+/articles/39-regression-model-diagnostics/161-linear-regression-assumptions-and-diagnostics-in-r-essentials
+
+[2]: Twitch channels, games and Global Statistics. (n.d.). Retrieved from https://twitchtracker.com/ 
+
+[3]: Twitch. (n.d.). https://www.twitch.tv/ 
+
+# 9. Appendix {#Appendix}
+## 1 `average_viewers`: {#1} 
+```{r}
+summary(average_viewers)
+```
+## 2 `average_viewers_log`: {#2} 
+```{r}
+summary(average_viewers_log)
+```
+## 3 `partnered_mature`: {#3}
+```{r}
+summary(partnered_mature)
+```
+## 4 `streamMatureModel`: {#4}
+```{r}
+summary(streamMatureModel)
+```
+
